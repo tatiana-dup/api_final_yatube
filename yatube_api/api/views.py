@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, viewsets
+from rest_framework import viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
@@ -10,19 +10,11 @@ from api.serializers import (CommentSerializer,
                              FollowSerializer,
                              GroupSerializer,
                              PostSerializer)
-from posts.models import Follow, Group, Post
+from api.viewsets import ListOrCreateViewSet
+from posts.models import Group, Post
 
 
 User = get_user_model()
-
-
-class ListOrCreateViewSet(mixins.CreateModelMixin,
-                          mixins.ListModelMixin,
-                          viewsets.GenericViewSet):
-    """
-    Базовый класс-вьюсет, который предоставляет методы `create()` и `list()`.
-    """
-    pass
 
 
 class PostModelViewSet(viewsets.ModelViewSet):
@@ -67,7 +59,7 @@ class FollowModelViewSet(ListOrCreateViewSet):
     search_fields = ('following__username',)
 
     def get_queryset(self):
-        return Follow.objects.filter(user=self.request.user)
+        return self.request.user.followers.all()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
